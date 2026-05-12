@@ -1,0 +1,26 @@
+# Mayou 依赖
+# Python >= 3.11
+
+# 截图与窗口
+mss>=9.0.1
+pygetwindow>=0.0.9
+
+# 图像处理
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# UI
+PySide6>=6.5.0
+
+# 麻将引擎（fork 后替换为本地版本）
+# python-mahjong  # 注释掉，因为我们要 fork 后引用本地修改版
+
+# 工具
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# 开发期可选
+# black>=23.7.0       # 格式化
+# ruff>=0.0.290       # lint
+# mypy>=1.5.0         # 类型检查
