@@ -33,6 +33,11 @@ tools/captures_raw/
 assets/templates/_unrecognized/
 *.log
 
+# 复盘记录（私人数据，不入 Git）
+data/replays/
+data/anomaly/
+!data/.gitkeep
+
 # 临时
 tmp/
 scratch/

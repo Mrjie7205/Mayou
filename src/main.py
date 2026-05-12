@@ -1,15 +1,25 @@
-"""
-Mayou 主入口
+"""Mayou 主入口。
 
-启动顺序：
-1. 加载配置 (assets/configs/<platform>.json)
-2. 启动 UI（主线程）
-3. 启动主循环线程（采集 → 识别 → 状态机 → 引擎 → 通知 UI）
+Sprint 0：启动 PySide6 主控台窗口 + 200ms 心跳 timer。
+后续 Sprint 接入：截图 → 识别 → 状态机 → 引擎 → UI 更新。
 
-当前为骨架，待 Sprint 0 实现。
+本地运行：
+    python -m src.main
 """
+import sys
+
+from PySide6.QtWidgets import QApplication
+
+from src.ui.main_window import MainWindow
+
+
+def main() -> int:
+    app = QApplication(sys.argv)
+    app.setApplicationName("Mayou")
+    window = MainWindow()
+    window.show()
+    return app.exec()
+
 
 if __name__ == "__main__":
-    raise NotImplementedError(
-        "Mayou 还未实现。请按 ROADMAP.md 的 Sprint 0 开工。"
-    )
+    sys.exit(main())

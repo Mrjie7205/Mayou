@@ -40,11 +40,13 @@
 
 ### Sprint 0：脚手架（1-3 周）
 
-- [ ] Python 环境 + 依赖安装
-- [ ] `tools/region_picker.py`：手动框选屏幕区域并保存到 `assets/configs/<platform>.json`
-- [ ] PySide6 主窗口骨架（空界面，能悬浮置顶）
-- [ ] 主循环骨架：截图 → 打印图像尺寸 → 200ms 循环
-- [ ] 项目能跑起来，能看到截图区域被框出来
+- [~] Python 环境 + 依赖安装（云端只到 `requirements.txt` 锁定；本地 `pip install` 待 Max 配环境）
+- [x] `tools/region_picker.py`：全屏透明覆盖层 + 鼠标拖框 + 保存到 `assets/configs/redfinger.json`
+- [x] PySide6 主控台骨架：左半适配区 + 右半 4 个信息块 + 顶栏暂停（Ctrl+Space）+ 状态栏
+- [x] 主循环骨架：QTimer 200ms 心跳，暂停时停拍，状态栏显示心跳计数
+- [~] 项目能跑起来，能看到截图区域被框出来（代码完成，等 Max 本地 `python -m src.main` 与 `python -m tools.region_picker` 实测）
+
+> 本地实测前置：Max 在 Y9000K 上装 Python 3.11+ 与 `pip install -r requirements.txt`。Claude 会在 Max 准备好时给手把手指引。
 
 ### Sprint 1：模板采集器（4-6 周）
 
