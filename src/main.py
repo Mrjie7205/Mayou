@@ -1,23 +1,40 @@
 """Mayou 主入口。
 
-Sprint 0：启动 PySide6 主控台窗口 + 200ms 心跳 timer。
-后续 Sprint 接入：截图 → 识别 → 状态机 → 引擎 → UI 更新。
-
-本地运行：
-    python -m src.main
+- python -m src.main           启动主控台（等待真实数据接入）
+- python -m src.main --demo    启动演示模式（模拟一局）
 """
+from __future__ import annotations
+
+import argparse
 import sys
 
 from PySide6.QtWidgets import QApplication
 
+from src.state.game_state import GameState
+from src.ui.demo_mode import DemoDriver
 from src.ui.main_window import MainWindow
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(prog="mayou")
+    parser.add_argument(
+        "--demo", action="store_true",
+        help="演示模式：用预设事件序列驱动 UI（不需要红手指）",
+    )
+    args = parser.parse_args()
+
     app = QApplication(sys.argv)
     app.setApplicationName("Mayou")
-    window = MainWindow()
+
+    gs = GameState.fresh(dealer="self")
+    demo = DemoDriver(gs) if args.demo else None
+
+    window = MainWindow(gs, demo_driver=demo)
     window.show()
+
+    if demo is not None:
+        demo.start()
+
     return app.exec()
 
 
