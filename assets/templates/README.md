@@ -25,14 +25,16 @@ assets/templates/
 └── _unrecognized/          # 识别置信度低的图像，待补模板
 ```
 
-## 转转麻将牌型 28 类
+## 株洲碰胡牌型 28 类（三色版本）
 
 - 9 种筒（tong_1 ~ tong_9）
 - 9 种条/索（tiao_1 ~ tiao_9）
 - 9 种万（wan_1 ~ wan_9）
 - 1 种背面（back）
 
-⚠️ **没有红中、没有字牌**。详见 [../../docs/06-zhuanzhuan-rules.md](../../docs/06-zhuanzhuan-rules.md)。
+⚠️ **没有红中、没有字牌、没有花牌**。详见 [../../docs/07-zhuzhou-pengHu-rules.md](../../docs/07-zhuzhou-pengHu-rules.md)。
+
+⚠️ 如果 Sprint 0 实测确认闲逸的株洲碰胡是单色变体（只用万），模板类数降到 10（9 种万 + 背面）。
 
 ## 采集目标
 

@@ -6,19 +6,18 @@
 ## 文件命名
 
 `<platform_slug>.json`，例如：
-- `netease_cloud.json`（网易云游戏）
-- `tencent_start.json`（腾讯先锋）
-- `migu.json`（咪咕快游）
+- `redfinger.json`（红手指云手机，当前选定，见 [ADR-001](../../docs/decisions/ADR-001-platform.md)）
+- 未来若扩展：`duoduoyun.json`、`leidian.json` 等
 
 ## 结构
 
 ```jsonc
 {
-  "platform": "netease_cloud",
-  "platform_display_name": "网易云游戏",
+  "platform": "redfinger",
+  "platform_display_name": "红手指云手机 + 闲逸棋牌",
   "created_at": "2026-XX-XX",
   
-  "window_title_pattern": "网易云游戏.*转转麻将",
+  "window_title_pattern": "红手指.*",  // Sprint 0 实测后确认
   
   "regions": {
     "my_hand": {"x": 100, "y": 600, "w": 800, "h": 100},
@@ -40,9 +39,15 @@
   },
   
   "rule_variant": {
-    "qishou_hu": false,
-    "guo_shui": false,
-    "yipao_duoxiang": true
+    // 株洲碰胡变体开关，详见 docs/07 §8。所有字段 Sprint 0 实测后填实
+    "tile_set": "three_suit",      // "three_suit"(108张) | "single_suit"(36张) ⚠️ 待实测
+    "qishou_hu": false,             // 起手胡 ⚠️
+    "qiang_gang_hu": true,          // 抢杠胡（暗杠通常不可抢）⚠️
+    "qi_dui_zi": false,             // 七对子 ⚠️
+    "quan_qiu_ren_fan": 0,          // 全求人加番值 ⚠️
+    "si_an_ke_fan": 0,              // 四暗刻加番值 ⚠️
+    "yipao_duoxiang": true,         // 一炮多响 ⚠️
+    "haidi_hu_fan": 0               // 海底胡加番值 ⚠️
   },
   
   "ui": {
