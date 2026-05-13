@@ -4,10 +4,11 @@
 框选完成后弹出输入框让用户命名该区域，写入 assets/configs/redfinger.json
 的 regions 字段。
 
-典型用法（Sprint 0/1 校准每个识别区域时反复运行）：
-    python -m tools.region_picker
+支持**连续框多个区域**：每次命名保存后会自动回到遮罩，继续框下一个。
+按 Esc 退出。
 
-按 Esc 取消。
+典型用法：
+    python -m tools.region_picker
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import json
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, QRect, Qt
+from PySide6.QtCore import QPoint, QRect, Qt, QTimer
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import (
     QApplication,
@@ -43,7 +44,6 @@ class RegionPicker(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setCursor(Qt.CursorShape.CrossCursor)
-        # virtualGeometry 覆盖所有显示器（多屏支持）
         screen_geo = QApplication.primaryScreen().virtualGeometry()
         self.setGeometry(screen_geo)
         self._start: QPoint | None = None
@@ -80,15 +80,21 @@ class RegionPicker(QWidget):
         if self._start is None:
             return
         self._end = event.position().toPoint()
-        self.update()
-        self.hide()
         rect = QRect(self._start, self._end).normalized()
         if rect.width() < 5 or rect.height() < 5:
-            QMessageBox.warning(None, "区域太小", "拖动太短，已取消保存。")
-            QApplication.quit()
+            self._start = None
+            self._end = None
+            self.update()
             return
+        self.hide()
+        QTimer.singleShot(120, lambda: self._after_pick(rect))
+
+    def _after_pick(self, rect: QRect) -> None:
         self._save_region(rect)
-        QApplication.quit()
+        self._start = None
+        self._end = None
+        self.show()
+        self.update()
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key.Key_Escape:
@@ -99,7 +105,8 @@ class RegionPicker(QWidget):
         name, ok = QInputDialog.getText(
             None,
             "区域命名",
-            "请输入区域名（如 my_hand / discard_self / meld_left / baojing_indicator）：",
+            "请输入区域名（如 my_hand / discard_self / meld_left / baojing_indicator）。\n"
+            "取消则丢弃本次框选；保存后会回到遮罩继续框下一个，按 Esc 退出。",
         )
         if not ok or not name:
             return
@@ -112,7 +119,7 @@ class RegionPicker(QWidget):
                 config = {}
         config.setdefault("platform", "redfinger")
         config.setdefault("regions", {})
-        config["regions"][name] = {
+        config["regions"][name.strip()] = {
             "x": rect.x(),
             "y": rect.y(),
             "w": rect.width(),
