@@ -51,6 +51,10 @@ class ReplaySession:
         target_dir.mkdir(parents=True, exist_ok=True)
         ts = self.started_at.replace(":", "").replace("-", "")
         path = target_dir / f"{ts}-{self.dealer}.json"
+        counter = 1
+        while path.exists():
+            path = target_dir / f"{ts}-{self.dealer}-{counter}.json"
+            counter += 1
         path.write_text(
             json.dumps(self.to_dict(), ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",

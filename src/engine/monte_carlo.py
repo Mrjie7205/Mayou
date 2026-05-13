@@ -45,13 +45,14 @@ def remaining_tile_pool(
     hand: Hand,
     visible_tiles: Counter,
 ) -> Counter:
-    """剩余可摸牌池 = 全副 - (自己手里 + 全场可见的)。
+    """剩余可摸牌池 = 全副 - 自己暗手 - 全场可见。
 
-    visible_tiles 应包括：所有家弃牌区 + 副露区（不含自己暗手）+ 自己已打的牌
+    visible_tiles 应是「全场可见」(4 家弃牌 + 4 家副露，含自己副露)。
+    自己暗手单独计入，避免重复减。
     """
     pool = Counter({k: DECK_COUNT_PER_KIND for k in ALL_KINDS})
-    for t in hand.all_visible_tiles():
-        pool[t] -= 1
+    for t, c in hand.closed.items():
+        pool[t] -= c
     for t, c in visible_tiles.items():
         pool[t] -= c
     for t in list(pool.keys()):

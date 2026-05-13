@@ -43,7 +43,8 @@ class RegionPicker(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setCursor(Qt.CursorShape.CrossCursor)
-        screen_geo = QApplication.primaryScreen().geometry()
+        # virtualGeometry 覆盖所有显示器（多屏支持）
+        screen_geo = QApplication.primaryScreen().virtualGeometry()
         self.setGeometry(screen_geo)
         self._start: QPoint | None = None
         self._end: QPoint | None = None

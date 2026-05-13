@@ -46,7 +46,7 @@ def test_kan_win():
 
 
 def test_with_peng_meld():
-    # 副露：碰 L5×3。暗手：3 句话 + 1 对将
+    # 副露：碰 L5×3（1 组件已占）。暗手 11 张 = 3 组件（9 张）+ 1 对将（2 张）
     melds = [Meld("peng", (Tile("L", 5), Tile("L", 5), Tile("L", 5)))]
     codes = [
         "L1", "L2", "L3",
@@ -55,12 +55,7 @@ def test_with_peng_meld():
         "U9", "U9",
     ]
     hand = hand_from(codes, melds)
-    # 暗手 11 张 + win_tile 1 张 = 12 张 = 3 组件 + 1 对将
-    assert can_win(hand)  # 已是 11 张听牌？不，11 张要 12 张才算
-    # 修：标准胡型需 4 组件 + 1 将；副露已占 1，暗手需 3 组件 + 1 将
-    # 3 组件 = 9 张，1 对 = 2 张，合计 11 张暗手就能胡（不需要 win_tile，自摸理论上）
-    # 但实际游戏胡牌时摸进了第 14 张，所以本应 win_tile=None 也成立
-    # 实际测试：暗手就是 11 张，已经成型
+    assert can_win(hand)
 
 
 def test_jiao_in_win():

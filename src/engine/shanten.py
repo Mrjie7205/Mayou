@@ -22,11 +22,13 @@ from src.engine.components import (
 )
 from src.engine.hand import Hand
 from src.engine.tiles import Tile
-from src.engine.win_check import is_tenpai
+from src.engine.win_check import can_win, is_tenpai
 
 
 def shanten(hand: Hand) -> int:
-    """返回向听数。0 = 听牌，1 = 一向听，..."""
+    """返回向听数。0 = 听牌或已胡，1 = 一向听，..."""
+    if can_win(hand):
+        return 0
     if is_tenpai(hand):
         return 0
 

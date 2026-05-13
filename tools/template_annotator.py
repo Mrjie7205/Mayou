@@ -71,7 +71,8 @@ class TemplateAnnotator(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setCursor(Qt.CursorShape.CrossCursor)
-        screen_geo = QApplication.primaryScreen().geometry()
+        # virtualGeometry 覆盖所有显示器（多屏支持）
+        screen_geo = QApplication.primaryScreen().virtualGeometry()
         self.setGeometry(screen_geo)
         self._start: QPoint | None = None
         self._end: QPoint | None = None
@@ -129,7 +130,7 @@ class TemplateAnnotator(QWidget):
                 "height": rect.height(),
             }
             raw = sct.grab(monitor)
-            image_bgr = np.array(raw)[:, :, :3]
+            image_bgr = np.ascontiguousarray(np.array(raw)[:, :, :3])
 
         text, ok = QInputDialog.getText(
             None,

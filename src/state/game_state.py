@@ -128,17 +128,17 @@ def _on_ti(gs: GameState, ev: Event) -> None:
         return
     seat = gs.seats[ev.seat]
     if ev.seat == "self":
-        # 提牌：升级已有的 wei 或新增 4 张组
+        # 优先升级已有的 wei / an_ke 为 ti，避免出现幽灵 meld
         for i, m in enumerate(seat.hand.melds):
-            if m.type == "wei" and m.tiles[0] == ev.tile:
+            if m.type in ("wei", "an_ke") and m.tiles and m.tiles[0] == ev.tile:
                 seat.hand.melds[i] = Meld("ti", (ev.tile,) * 4)
                 try:
                     seat.hand.remove(ev.tile)
                 except ValueError:
                     pass
                 return
-        # 否则手里有坎/偎过：新建 ti
-        for _ in range(3):
+        # 起手就持 4 张：从 closed 整组扣除后新增 ti
+        for _ in range(4):
             try:
                 seat.hand.remove(ev.tile)
             except ValueError:
@@ -160,7 +160,7 @@ def _on_pao(gs: GameState, ev: Event) -> None:
 
 
 def _on_chi(gs: GameState, ev: Event) -> None:
-    if ev.seat is None or not ev.tiles:
+    if ev.seat is None or len(ev.tiles) < 3:
         return
     seat = gs.seats[ev.seat]
     chi_type = ev.extra.get("chi_type", "chi_jvhua")

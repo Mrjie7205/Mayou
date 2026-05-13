@@ -22,10 +22,10 @@ class Region:
 def grab_region(region: Region) -> np.ndarray:
     with mss.mss() as sct:
         raw = sct.grab(region.as_mss_monitor())
-        return np.array(raw)[:, :, :3]
+        return np.ascontiguousarray(np.array(raw)[:, :, :3])
 
 
 def grab_primary_screen() -> np.ndarray:
     with mss.mss() as sct:
         raw = sct.grab(sct.monitors[1])
-        return np.array(raw)[:, :, :3]
+        return np.ascontiguousarray(np.array(raw)[:, :, :3])

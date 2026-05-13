@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
         self.demo = demo_driver
         self._paused = False
         self._rng = random.Random(20260512)
+        self._last_event_idx = 0
 
         self._build_ui()
         self._setup_shortcuts()
@@ -137,11 +138,24 @@ class MainWindow(QMainWindow):
             for seat, s in gs.seats.items() if seat != "self"
         }
 
-        if my_hand.closed_size() > 0 and not gs.finished:
-            waits = waiting_tiles(my_hand) if sh == 0 else []
-            wp = 0.0
-            es = 0.0
-            self.analysis_panel.update_self(sh, waits, wp, es)
+        self.analysis_panel.update_opponents(opponents)
+        waits = (
+            waiting_tiles(my_hand)
+            if sh == 0 and my_hand.closed_size() > 0
+            else []
+        )
+
+        last_event = gs.history[-1] if gs.history else None
+        should_recommend = (
+            last_event is not None
+            and last_event.seat == "self"
+            and last_event.type in ("draw", "deal")
+            and not gs.finished
+            and my_hand.closed_size() > 0
+        )
+        win_prob = 0.0
+        expected = 0.0
+        if should_recommend:
             try:
                 recs = recommend(
                     my_hand, opponents,
@@ -150,12 +164,17 @@ class MainWindow(QMainWindow):
                     rng=self._rng,
                 )
                 self.suggestion_panel.update_recommendations(recs)
-            except Exception:
-                pass
-        self.analysis_panel.update_opponents(opponents)
+                if recs:
+                    win_prob = recs[0].attack.win_prob
+                    expected = recs[0].attack.expected_score
+            except Exception as e:
+                self._set_status(f"推荐计算失败：{e}")
+        self.analysis_panel.update_self(sh, waits, win_prob, expected)
 
-        if gs.history:
-            self.event_log_panel.replace_all(gs.history)
+        new_events = gs.history[self._last_event_idx:]
+        for ev in new_events:
+            self.event_log_panel.append_event(ev)
+        self._last_event_idx = len(gs.history)
 
         if gs.finished:
             winner = next(

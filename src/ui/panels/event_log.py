@@ -1,6 +1,7 @@
 """事件日志面板：最近 N 条事件，最新在上。"""
 from __future__ import annotations
 
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QGroupBox,
     QListWidget,
@@ -50,10 +51,15 @@ class EventLogPanel(QGroupBox):
 
     def append_event(self, event: Event) -> None:
         text = self._format(event)
+        if event.confidence < 0.7:
+            text = "⚠ " + text
         item = QListWidgetItem(text)
         if event.confidence < 0.7:
-            item.setForeground(self.palette().color(self.foregroundRole()))
-            item.setText("⚠ " + text)
+            item.setForeground(QColor("#ffa726"))
+        elif event.type == "hu":
+            item.setForeground(QColor("#80cbc4"))
+        elif event.type == "baojing":
+            item.setForeground(QColor("#ef5350"))
         self._list.insertItem(0, item)
         while self._list.count() > self.max_items:
             self._list.takeItem(self._list.count() - 1)
