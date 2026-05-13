@@ -57,10 +57,16 @@ class CounterPanel(QGroupBox):
 
     @staticmethod
     def _cell_style(tile: Tile, count: int) -> str:
-        color = "#e57373" if tile.is_red else "#e0e0e0"
         if count == 0:
-            color = "#555"
+            color = "#9e9e9e"
         elif count == 1:
             color = "#ffd54f"
-        weight = "bold" if count <= 1 else "normal"
-        return f"color: {color}; font-weight: {weight}; padding: 2px 4px;"
+        elif tile.is_red:
+            color = "#ff6b6b"
+        else:
+            color = "#f5f5f5"
+        weight = "bold" if count <= 1 or tile.is_red else "normal"
+        return (
+            f"color: {color}; font-size: 13px; "
+            f"font-weight: {weight}; padding: 3px 6px;"
+        )
