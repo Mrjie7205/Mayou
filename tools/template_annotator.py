@@ -28,7 +28,17 @@ from pathlib import Path
 import mss
 import numpy as np
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer
-from PySide6.QtGui import QColor, QImage, QMouseEvent, QPainter, QPaintEvent, QPen, QPixmap
+from PySide6.QtGui import (
+    QColor,
+    QImage,
+    QKeySequence,
+    QMouseEvent,
+    QPainter,
+    QPaintEvent,
+    QPen,
+    QPixmap,
+    QShortcut,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -49,6 +59,24 @@ from src.recognize.template_loader import (
     TEMPLATES_DIR,
     tile_to_template_kind,
 )
+
+
+def _device_pixel_ratio() -> float:
+    screen = QApplication.primaryScreen()
+    if screen is None:
+        return 1.0
+    return float(screen.devicePixelRatio())
+
+
+def _logical_rect_to_physical_monitor(rect: QRect) -> dict:
+    """把 Qt 报告的逻辑像素 QRect 转成 mss 需要的物理像素 monitor dict。"""
+    ratio = _device_pixel_ratio()
+    return {
+        "left": int(round(rect.x() * ratio)),
+        "top": int(round(rect.y() * ratio)),
+        "width": int(round(rect.width() * ratio)),
+        "height": int(round(rect.height() * ratio)),
+    }
 
 
 def _resolve_kind(user_input: str) -> str:
@@ -252,6 +280,17 @@ class TemplateAnnotator(QWidget):
         self._start: QPoint | None = None
         self._end: QPoint | None = None
 
+        # 全局 Esc 退出（哪怕焦点丢给了对话框也能用）
+        self._esc_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
+        self._esc_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        self._esc_shortcut.activated.connect(QApplication.quit)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.activateWindow()
+        self.raise_()
+        self.setFocus()
+
     def paintEvent(self, _event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(0, 0, 0, 100))
@@ -297,13 +336,8 @@ class TemplateAnnotator(QWidget):
             QApplication.quit()
 
     def _capture_and_handle(self, rect: QRect) -> None:
+        monitor = _logical_rect_to_physical_monitor(rect)
         with mss.mss() as sct:
-            monitor = {
-                "left": rect.x(),
-                "top": rect.y(),
-                "width": rect.width(),
-                "height": rect.height(),
-            }
             raw = sct.grab(monitor)
             image_bgr = np.ascontiguousarray(np.array(raw)[:, :, :3])
 
