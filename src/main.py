@@ -15,6 +15,73 @@ from src.ui.demo_mode import DemoDriver
 from src.ui.main_window import MainWindow
 
 
+DARK_STYLESHEET = """
+QMainWindow, QWidget {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+}
+QGroupBox {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    margin-top: 14px;
+    padding-top: 6px;
+    font-weight: bold;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 6px;
+    color: #80cbc4;
+    font-weight: bold;
+}
+QLabel {
+    color: #e0e0e0;
+    background: transparent;
+}
+QPushButton {
+    background-color: #424242;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 4px 14px;
+    border-radius: 3px;
+}
+QPushButton:hover {
+    background-color: #505050;
+    border: 1px solid #777;
+}
+QPushButton:pressed {
+    background-color: #353535;
+}
+QListWidget {
+    background-color: #1e1e1e;
+    color: #c0c0c0;
+    border: 1px solid #444;
+}
+QStatusBar {
+    background-color: #2b2b2b;
+    color: #80cbc4;
+}
+QToolBar {
+    background-color: #353535;
+    border: none;
+    padding: 4px;
+}
+QInputDialog, QMessageBox {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+}
+QLineEdit {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 3px;
+    border-radius: 2px;
+}
+"""
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="mayou")
     parser.add_argument(
@@ -25,6 +92,7 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     app.setApplicationName("Mayou")
+    app.setStyleSheet(DARK_STYLESHEET)
 
     gs = GameState.fresh(dealer="self")
     demo = DemoDriver(gs) if args.demo else None
