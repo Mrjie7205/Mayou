@@ -1,25 +1,27 @@
-# Mayou 依赖
-# Python >= 3.11
+# Mayou dependencies
+# Requires Python >= 3.11
+# (Comments kept ASCII-only to avoid pip GBK decode errors on Chinese Windows)
 
-# 截图与窗口
+# Screen capture / window
 mss>=9.0.1
 pygetwindow>=0.0.9
 
-# 图像处理
+# Image processing
 opencv-python>=4.8.0
 numpy>=1.24.0
 Pillow>=10.0.0
 
-# UI
+# UI framework
 PySide6>=6.5.0
 
-# 字牌引擎从零自写（见 ADR-002 修正段），无第三方引擎依赖
+# Zihai (zhuzhou penghu) engine is hand-written, see ADR-002 amendment.
+# No third-party engine dependency.
 
-# 工具
+# Test tooling
 pytest>=7.4.0
 pytest-cov>=4.1.0
 
-# 开发期可选
-# black>=23.7.0       # 格式化
-# ruff>=0.0.290       # lint
-# mypy>=1.5.0         # 类型检查
+# Optional dev tools (uncomment if you want them):
+# black>=23.7.0      # formatter
+# ruff>=0.0.290      # linter
+# mypy>=1.5.0        # type checker
