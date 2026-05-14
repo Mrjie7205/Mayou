@@ -38,9 +38,9 @@ class SuggestionPanel(QGroupBox):
     @staticmethod
     def _format(rec: Recommendation, label: str) -> str:
         red_mark = " (红)" if rec.tile.is_red else ""
+        sign = "+" if rec.ev >= 0 else ""
         return (
-            f"{label}: {rec.tile.display_name}{red_mark}\n"
-            f"  进攻 {rec.attack.composite:.2f}（胡 {rec.attack.win_prob*100:.0f}% / 期望 {rec.attack.expected_score:.1f} 分）\n"
-            f"  防守 {rec.defense.safety:.2f}\n"
-            f"  综合 {rec.combined:.2f}"
+            f"{label}: {rec.tile.display_name}{red_mark}  EV {sign}{rec.ev:.1f} 分\n"
+            f"  我胡期望 +{rec.ev_my:.1f}（胡 {rec.attack.win_prob*100:.0f}%）\n"
+            f"  放炮预期 −{rec.ev_loss:.1f}（安全 {rec.defense.safety:.2f}）"
         )

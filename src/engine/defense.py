@@ -37,6 +37,36 @@ def is_genbutsu(tile: Tile, opp: OpponentInfo) -> bool:
     return tile in opp.discards
 
 
+def estimate_opponent_shanten(opp: OpponentInfo) -> int:
+    """粗估对手向听数（Wave 1.2，见 ADR-003）。
+
+    无暗手可见时，按副露次数 + 弃牌量启发式推断。
+    返回值含义：
+        0-1: 已听 / 接近听 → 极度危险
+        2-3: 中等危险
+        4+: 远未成型，相对安全
+    """
+    if opp.is_baojing:
+        return 1
+    n_melds = len(opp.melds)
+    n_discards = len(opp.discards)
+    if n_melds >= 3:
+        return 1
+    if n_melds >= 2:
+        return 2
+    if n_melds == 1 and n_discards >= 5:
+        return 2
+    if n_melds == 1:
+        return 3
+    if n_discards >= 8:
+        return 2
+    if n_discards >= 5:
+        return 3
+    if n_discards >= 3:
+        return 4
+    return 5
+
+
 def is_jin(tile: Tile, opp: OpponentInfo) -> bool:
     """筋：对方打过同字号 5 → 2、8 安全；打过 4 → 1、7 安全；打过 6 → 3、9 安全。
 
@@ -106,6 +136,14 @@ def evaluate_defense_for_seat(
     if visible_count >= 3:
         return 0.85 if tile.is_red else 0.92
 
+    # 卡位：对手 peng_count ≥ 3 但未报警（接近五福或已三大）
+    # 未现身字号极可能是他凑五福缺的张或做绞牌的关键张（Wave 1.4，见 ADR-003）
+    if opp.peng_count >= 3 and visible_count == 0:
+        danger = 0.7
+        if tile.is_red:
+            danger += 0.1
+        return max(0.0, min(1.0, 1.0 - danger))
+
     danger = 0.0
     meld_tiles = {t for _type, ts in opp.melds for t in ts}
     if tile in meld_tiles:
@@ -113,6 +151,11 @@ def evaluate_defense_for_seat(
     if is_jin(tile, opp):
         danger -= 0.15  # Gemini 评审：从 -0.3 降权（字牌筋效力弱于麻将）
     if tile.is_red:
+        danger += 0.1
+
+    # 对手向听越低，所有未现身字号危险微涨
+    est_sh = estimate_opponent_shanten(opp)
+    if est_sh <= 2 and visible_count == 0:
         danger += 0.1
 
     safety = 1.0 - danger

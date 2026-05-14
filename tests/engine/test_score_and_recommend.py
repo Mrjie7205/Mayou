@@ -77,8 +77,10 @@ def test_recommend_returns_sorted():
         rng=random.Random(42),
     )
     assert len(recs) > 0
-    # 降序
+    # 按 EV 降序（Wave 1.1）
     for i in range(len(recs) - 1):
-        assert recs[i].combined >= recs[i + 1].combined
+        assert recs[i].ev >= recs[i + 1].ev
     # 排名连续
     assert [r.rank for r in recs] == list(range(1, len(recs) + 1))
+    # combined 字段仍存在但不再保证排序顺序（兼容字段）
+    assert all(hasattr(r, "ev_my") and hasattr(r, "ev_loss") for r in recs)

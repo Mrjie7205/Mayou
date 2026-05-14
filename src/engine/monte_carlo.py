@@ -68,6 +68,69 @@ def _draw_random(pool: Counter, rng: random.Random) -> Tile | None:
     return rng.choice(tiles)
 
 
+def _fast_eval_discard(
+    hand_closed: Counter,
+    rng: random.Random,
+    *,
+    forbidden: Tile | None = None,
+) -> Tile | None:
+    """启发式选要打的牌（Wave 1.3，见 ADR-003）。
+
+    替代之前的 random_choice，让 MC 模拟更接近真实玩家决策。
+    策略（按优先级）：
+    1. 排除 forbidden（刚摸到的对/坎张，强制偎/提）
+    2. 优先打孤张（count==1 且无相邻搭子）
+    3. 次优先：边缘字号（num=1 或 10）的散张
+    4. 红色字号尽量留（除非真孤立）
+    5. top-2 候选间用 rng 选择，保持模拟多样性
+
+    复杂度 O(n_kinds)，单次调用 < 0.1ms。
+    """
+    candidates = [t for t in hand_closed if t != forbidden]
+    if not candidates:
+        candidates = list(hand_closed.keys())
+    if not candidates:
+        return None
+
+    def has_neighbor(t: Tile) -> bool:
+        for delta in (-1, 1):
+            n = t.num + delta
+            if 1 <= n <= 10:
+                if hand_closed.get(Tile(t.case, n), 0) > 0:
+                    return True
+        # 特殊连张 2-7-10
+        if t.num in (2, 7, 10):
+            partners = {2, 7, 10} - {t.num}
+            for n in partners:
+                if hand_closed.get(Tile(t.case, n), 0) > 0:
+                    return True
+        # 同 num 异 case (绞牌搭子)
+        other_case = "U" if t.case == "L" else "L"
+        if t.num not in (2, 7, 10):
+            if hand_closed.get(Tile(other_case, t.num), 0) > 0:
+                return True
+        return False
+
+    def discard_priority(t: Tile) -> float:
+        count = hand_closed[t]
+        score = 0.0
+        if count == 1:
+            score += 2.0          # 孤张优先
+        if count >= 2:
+            score -= 3.0          # 有对/坎不能轻易拆
+        if not has_neighbor(t) and count == 1:
+            score += 2.0          # 真孤立
+        if t.num in (1, 10):
+            score += 0.3          # 边缘略优
+        if t.is_red:
+            score -= 0.8          # 红牌珍贵
+        return score
+
+    ranked = sorted(candidates, key=discard_priority, reverse=True)
+    top_k = ranked[: min(2, len(ranked))]
+    return rng.choice(top_k)
+
+
 def evaluate_attack(
     hand: Hand,
     discard_tile: Tile,
@@ -119,17 +182,16 @@ def evaluate_attack(
                 won = True
                 break
             sim_hand.add(drawn)
-            # 强制规则：摸到自对子（→ 偎）或自坎（→ 提）的牌不能立刻打，
-            # 必须保留为对子/坎结构。Gemini 评审 2026-05：避免 MC 跑出违反字牌
-            # 强制动作的非法局面。这里用最简化版——把这种刚摸成对/坎的牌从弃牌
-            # 候选里排除，不真的转 melds（性能优先）。
+            # 强制规则：摸到自对子（→ 偎）或自坎（→ 提）的牌不能立刻打
             forbidden_discard = (
                 drawn if sim_hand.closed.get(drawn, 0) >= 2 else None
             )
-            keys = [k for k in sim_hand.closed.keys() if k != forbidden_discard]
-            if not keys:
-                keys = list(sim_hand.closed.keys())
-            discard = rng.choice(keys)
+            # Wave 1.3：用启发式替代纯随机，避免自杀式弃高危红牌
+            discard = _fast_eval_discard(
+                sim_hand.closed, rng, forbidden=forbidden_discard,
+            )
+            if discard is None:
+                break
             sim_hand.remove(discard)
         if not won:
             pass
