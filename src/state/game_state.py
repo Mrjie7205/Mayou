@@ -35,6 +35,9 @@ class GameState:
     last_drawn_tile: Tile | None = None
     finished: bool = False
     history: list[Event] = field(default_factory=list)
+    # 为特殊胡型判定提供上下文（天胡/地胡/五福，见 special_hu.py）
+    turn_number: int = 0           # 已进行的回合数（discard 事件计数）
+    dealer_first_tile: Tile | None = None  # 庄家首打的牌（用于地胡）
 
     @classmethod
     def fresh(cls, dealer: Seat = "self") -> "GameState":
@@ -95,6 +98,14 @@ def _on_discard(gs: GameState, ev: Event) -> None:
             pass
     gs.seats[ev.seat].discards.append(ev.tile)
     gs.last_drawn_tile = None
+    # 记录庄家首打（用于地胡判定）
+    if (
+        gs.dealer_first_tile is None
+        and ev.seat == gs.dealer
+        and gs.turn_number == 0
+    ):
+        gs.dealer_first_tile = ev.tile
+    gs.turn_number += 1
 
 
 def _on_peng(gs: GameState, ev: Event) -> None:

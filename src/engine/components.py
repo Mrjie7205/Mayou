@@ -46,6 +46,8 @@ def possible_components_at(anchor: Tile, tiles: Counter) -> Iterator[tuple[Tile,
     """枚举所有以 anchor 为最小元素、可从 tiles 中取出的完整组件。
 
     yields 每个组件按 (case, num) 排序的 tuple。
+
+    含坎(3) / 提(4) / 句话(3) / 绞牌(3) 全部。用于不区分门子类型的场景。
     """
     case, num = anchor.case, anchor.num
 
@@ -79,6 +81,49 @@ def possible_components_at(anchor: Tile, tiles: Counter) -> Iterator[tuple[Tile,
         # 形态 (anchor, partner, partner)：anchor 是单张，partner 在对子
         if tiles[anchor] >= 1 and tiles[partner] >= 2 and case == "L":
             yield (anchor, partner, partner)
+
+
+def possible_3_components_at(anchor: Tile, tiles: Counter) -> Iterator[tuple[Tile, ...]]:
+    """仅 3 张组件（坎 / 句话 / 绞牌）。**不含提**。
+
+    用于按 (k, m, j) 分类拆解时的 j 分支：j 代表"3 张组件门子数"。
+    """
+    case, num = anchor.case, anchor.num
+
+    # 坎
+    if tiles[anchor] >= 3:
+        yield (anchor, anchor, anchor)
+
+    # 句话普通
+    if num <= 8:
+        b, c = Tile(case, num + 1), Tile(case, num + 2)
+        if tiles[b] >= 1 and tiles[c] >= 1:
+            yield (anchor, b, c)
+
+    # 句话 2-7-10 特殊
+    if num == 2:
+        b, c = Tile(case, 7), Tile(case, 10)
+        if tiles[b] >= 1 and tiles[c] >= 1:
+            yield (anchor, b, c)
+
+    # 绞牌（仅 anchor.case=="L" 起头）
+    other = "U" if case == "L" else "L"
+    if num not in RED_NUMS and case == "L":
+        partner = Tile(other, num)
+        if tiles[anchor] >= 2 and tiles[partner] >= 1:
+            yield (anchor, anchor, partner)
+        if tiles[anchor] >= 1 and tiles[partner] >= 2:
+            yield (anchor, partner, partner)
+
+
+def can_take_ti_at(anchor: Tile, tiles: Counter) -> bool:
+    """anchor 能否作为提（4 张相同）的起点。"""
+    return tiles[anchor] >= 4
+
+
+def can_take_pair_at(anchor: Tile, tiles: Counter) -> bool:
+    """anchor 能否作为对（2 张相同）的起点。"""
+    return tiles[anchor] >= 2
 
 
 def possible_partials_at(anchor: Tile, tiles: Counter) -> Iterator[tuple[Tile, ...]]:
