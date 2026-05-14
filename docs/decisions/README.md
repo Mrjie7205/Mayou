@@ -38,3 +38,4 @@
 |---|---|---|
 | [001](ADR-001-platform.md) | 运行平台选型（红手指 + 闲逸棋牌） | ✅ Accepted |
 | [002](ADR-002-game-switch.md) | 核心游戏切换：转转麻将 → 株洲碰胡 | ✅ Accepted |
+| [003](ADR-003-target-upgrade.md) | 目标水平升级：中等人类 → 顶尖人类 | ✅ Accepted |
