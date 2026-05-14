@@ -134,6 +134,7 @@ class MainWindow(QMainWindow):
                 melds=[(m.type, m.tiles) for m in s.hand.melds],
                 peng_count=s.peng_count,
                 is_baojing=s.is_baojing,
+                passed_tiles=list(s.passed_tiles),
             )
             for seat, s in gs.seats.items() if seat != "self"
         }

@@ -21,6 +21,7 @@ class SeatState:
     peng_count: int = 0
     is_baojing: bool = False
     is_winner: bool = False
+    passed_tiles: list[Tile] = field(default_factory=list)  # 该家已过张的字（不能再吃/碰）
 
 
 @dataclass
@@ -178,6 +179,15 @@ def _on_baojing(gs: GameState, ev: Event) -> None:
         gs.seats[ev.seat].is_baojing = True
 
 
+def _on_guo_zhang(gs: GameState, ev: Event) -> None:
+    """过张：某家有机会吃/碰未行使，对该字号失去后续吃碰权。"""
+    if ev.seat is None or ev.tile is None:
+        return
+    seat = gs.seats[ev.seat]
+    if ev.tile not in seat.passed_tiles:
+        seat.passed_tiles.append(ev.tile)
+
+
 def _on_hu(gs: GameState, ev: Event) -> None:
     gs.finished = True
     if ev.seat is not None:
@@ -198,6 +208,7 @@ _HANDLERS = {
     "pao": _on_pao,
     "chi": _on_chi,
     "baojing": _on_baojing,
+    "guo_zhang": _on_guo_zhang,
     "hu": _on_hu,
     "chou_zhuang": _on_chou_zhuang,
 }

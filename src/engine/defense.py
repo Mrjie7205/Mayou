@@ -23,6 +23,7 @@ class OpponentInfo:
     melds: list[tuple[str, tuple[Tile, ...]]] = field(default_factory=list)
     peng_count: int = 0       # 已碰次数（用于五福报警判定）
     is_baojing: bool = False  # 五福报警状态
+    passed_tiles: list[Tile] = field(default_factory=list)  # 该家已过张的字（不能再吃/碰）
 
 
 @dataclass
@@ -39,9 +40,13 @@ def is_genbutsu(tile: Tile, opp: OpponentInfo) -> bool:
 def is_jin(tile: Tile, opp: OpponentInfo) -> bool:
     """筋：对方打过同字号 5 → 2、8 安全；打过 4 → 1、7 安全；打过 6 → 3、9 安全。
 
-    注：「2-7-10」特殊连张的额外筋逻辑（如打过 2 后 7、10 是否是筋）
-    暂不实现，⚠️ Sprint 7 实做时细化。本函数只判定标准三连筋。
+    **重要硬拦截**：tile.num ∈ {2,7,10} 不应用筋逻辑。
+    原因：字牌「2-7-10」特殊连张 + 红色字号绞牌结构，让 2/7/10 的"安全推断"失效。
+    例：对家打了 2，他可能仍持有 7/10 想凑「二七十」句话或绞牌，7 和 10 不安全。
+    （Gemini 2026-05 评审建议）
     """
+    if tile.num in (2, 7, 10):
+        return False
     for d in opp.discards:
         if d.case != tile.case:
             continue
@@ -67,27 +72,46 @@ def evaluate_defense_for_seat(
     opp: OpponentInfo,
     all_visible: Counter,
 ) -> float:
-    """对单个对手的安全度估算（0..1，1=最安全）。"""
+    """对单个对手的安全度估算（0..1，1=最安全）。
+
+    优先级（早返回）：
+    1. 现物         → safety 1.0
+    2. 过张         → safety 0.95（他失去了对该字号的吃/碰权）
+    3. 五福报警家   → 跑胡候选 0.0；其他 0.85（报警限缩听张范围，生张反而安全）
+    4. 绝张（≥3 见）→ safety 0.85-0.92（对家最多 1 张，无法碰/跑/提）
+    5. 通用计算（碰过+筋+红色加成）
+
+    （Gemini 2026-05 评审建议：过张追踪、报警重写、绝张判定 三项重写）
+    """
     if is_genbutsu(tile, opp):
         return 1.0
 
-    danger = 0.0
-    # 五福报警：威胁范围被规则限缩，但所有未弃牌都可能是听张
+    if tile in opp.passed_tiles:
+        return 0.95
+
     if opp.is_baojing:
-        danger += 0.6
+        meld_tiles = {t for _type, ts in opp.melds for t in ts}
+        if tile in meld_tiles:
+            # 跑胡候选：对家碰/偎过的字号，他再摸到/被打到能"跑"
+            return 0.0
+        # 报警家其他字号反而比未报警时更安全
+        # 他只能胡五福（凑那对手里看不见的字号）+ 跑胡（已副露字号）
+        # 我们看不到他手里那对，简化为通用低危
+        return 0.85
 
-    # 是不是被对方碰/偎/提过的字号附近？
-    relevant_meld_tiles = [t for _type, ts in opp.melds for t in ts]
-    if tile in relevant_meld_tiles:
+    # 绝张：该字号已可见 ≥3 张，对家最多剩 1 张
+    # 不能形成碰（需 2 张+1）、不能跑（需坎+1 或 偎+1）、不能提（需 4 张）
+    # 仅小概率被吃（句话/绞牌）或单吊将
+    visible_count = all_visible.get(tile, 0)
+    if visible_count >= 3:
+        return 0.85 if tile.is_red else 0.92
+
+    danger = 0.0
+    meld_tiles = {t for _type, ts in opp.melds for t in ts}
+    if tile in meld_tiles:
         danger += 0.2
-
     if is_jin(tile, opp):
-        danger -= 0.3
-
-    if is_bi(tile, all_visible):
-        danger -= 0.2
-
-    # 红色字号天然更危险（更值钱）
+        danger -= 0.15  # Gemini 评审：从 -0.3 降权（字牌筋效力弱于麻将）
     if tile.is_red:
         danger += 0.1
 

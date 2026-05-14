@@ -25,7 +25,7 @@ from src.engine.win_check import can_win, waiting_tiles
 
 
 DEFAULT_SIMULATIONS = 300  # MVP；Sprint 8 调到 1000+
-DEFAULT_LOOKAHEAD = 8      # 模拟自己最多再摸几手
+DEFAULT_LOOKAHEAD = 12     # Gemini 评审：8 步太浅，调到 12 让模拟更接近终局
 
 
 @dataclass
@@ -119,8 +119,16 @@ def evaluate_attack(
                 won = True
                 break
             sim_hand.add(drawn)
-            # 简化：随机打一张回去（模拟对手不知道你听啥）
-            keys = list(sim_hand.closed.keys())
+            # 强制规则：摸到自对子（→ 偎）或自坎（→ 提）的牌不能立刻打，
+            # 必须保留为对子/坎结构。Gemini 评审 2026-05：避免 MC 跑出违反字牌
+            # 强制动作的非法局面。这里用最简化版——把这种刚摸成对/坎的牌从弃牌
+            # 候选里排除，不真的转 melds（性能优先）。
+            forbidden_discard = (
+                drawn if sim_hand.closed.get(drawn, 0) >= 2 else None
+            )
+            keys = [k for k in sim_hand.closed.keys() if k != forbidden_discard]
+            if not keys:
+                keys = list(sim_hand.closed.keys())
             discard = rng.choice(keys)
             sim_hand.remove(discard)
         if not won:

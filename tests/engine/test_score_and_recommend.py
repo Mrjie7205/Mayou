@@ -38,7 +38,9 @@ def test_genbutsu():
 
 def test_jin_basic():
     opp = OpponentInfo(discards=[Tile("L", 5)])
-    assert is_jin(Tile("L", 2), opp)
+    # L2 因为 num=2 硬拦截，不算筋（Gemini 评审）
+    assert not is_jin(Tile("L", 2), opp)
+    # L8 仍算筋
     assert is_jin(Tile("L", 8), opp)
     assert not is_jin(Tile("L", 3), opp)
 
