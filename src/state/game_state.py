@@ -112,11 +112,16 @@ def _on_peng(gs: GameState, ev: Event) -> None:
 
 
 def _on_wei(gs: GameState, ev: Event) -> None:
+    """偎：摸到自己手里的对子，强制公开 3 张（1 明 2 暗）。
+
+    self 时：draw 事件已把摸到的牌加进 closed，偎动作把这 3 张（原对子 + 新摸）
+    全部转 meld → 应从 closed 扣 3 张（不是 2 张）。
+    """
     if ev.tile is None or ev.seat is None:
         return
     seat = gs.seats[ev.seat]
     if ev.seat == "self":
-        for _ in range(2):
+        for _ in range(3):
             try:
                 seat.hand.remove(ev.tile)
             except ValueError:
@@ -148,13 +153,24 @@ def _on_ti(gs: GameState, ev: Event) -> None:
 
 
 def _on_pao(gs: GameState, ev: Event) -> None:
-    # 跑：坎升提 / 偎被摸/打 / 碰过被摸
-    # 简化：升级已有的 peng/wei 为 ti
+    """跑：peng/wei 升级为 ti。
+
+    self 触发场景：
+    (a) 自摸到已碰/偎过的字号 → draw 事件先 add 1 张到 closed → 跑动作扣 1 张
+    (b) 别人打/摸的牌是自己已碰的 → closed 不动（外部 1 张进 meld）
+
+    简化：self 且 closed 里有这张 → 扣 1 张；否则视为外部触发不动。
+    """
     if ev.tile is None or ev.seat is None:
         return
     seat = gs.seats[ev.seat]
+    if ev.seat == "self" and seat.hand.closed.get(ev.tile, 0) >= 1:
+        try:
+            seat.hand.remove(ev.tile)
+        except ValueError:
+            pass
     for i, m in enumerate(seat.hand.melds):
-        if m.type in ("peng", "wei") and m.tiles[0] == ev.tile:
+        if m.type in ("peng", "wei") and m.tiles and m.tiles[0] == ev.tile:
             seat.hand.melds[i] = Meld("ti", (ev.tile,) * 4)
             return
     seat.hand.melds.append(Meld("ti", (ev.tile,) * 4))
