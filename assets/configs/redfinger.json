@@ -1,0 +1,11 @@
+{
+  "platform": "redfinger",
+  "regions": {
+    "test_X_button": {
+      "x": 2958,
+      "y": 1016,
+      "w": 62,
+      "h": 66
+    }
+  }
+}
