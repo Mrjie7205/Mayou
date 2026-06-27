@@ -59,6 +59,26 @@ QListWidget {
     color: #c0c0c0;
     border: 1px solid #444;
 }
+QTableWidget {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    gridline-color: #2b2b2b;
+    selection-background-color: #3a4a5a;
+}
+QTableWidget::item {
+    padding: 1px 2px;
+}
+QTableWidget::item:alternate {
+    background-color: #242424;
+}
+QHeaderView::section {
+    background-color: #353535;
+    color: #80cbc4;
+    padding: 3px;
+    border: none;
+    font-weight: bold;
+}
 QStatusBar {
     background-color: #2b2b2b;
     color: #80cbc4;
