@@ -40,12 +40,19 @@ class SituationPanel(QGroupBox):
             f"{head} | 牌墩剩 {deck_remaining} 张 | 当前轮：{seat_name}"
         )
 
-    def update_hand(self, tiles: list[Tile]) -> None:
+    def update_hand(self, tiles: list[Tile], highlight: Tile | None = None) -> None:
+        """渲染手牌。highlight 非 None 时，给推荐要打的那张加底色高亮 + ► 标记。"""
         sorted_tiles = sorted(tiles, key=lambda t: (t.case, t.num))
         parts = []
         for t in sorted_tiles:
             color = "#e57373" if t.is_red else "#e0e0e0"
-            parts.append(
-                f'<span style="color: {color};">{t.display_name}</span>'
-            )
+            if highlight is not None and t == highlight:
+                parts.append(
+                    f'<span style="color: {color}; background-color: #4a3f1e;'
+                    f' font-weight: bold;">►{t.display_name}</span>'
+                )
+            else:
+                parts.append(
+                    f'<span style="color: {color};">{t.display_name}</span>'
+                )
         self._hand_label.setText("".join(parts))

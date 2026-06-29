@@ -122,7 +122,6 @@ class MainWindow(QMainWindow):
         my = gs.seats["self"]
         my_hand = my.hand
 
-        self.situation_panel.update_hand(list(my_hand.closed.elements()))
         sh = shanten(my_hand) if my_hand.closed_size() > 0 else 99
         self.situation_panel.update_info(sh, gs.deck_remaining, gs.current_turn)
 
@@ -156,6 +155,7 @@ class MainWindow(QMainWindow):
         )
         win_prob = 0.0
         expected = 0.0
+        highlight = None
         if should_recommend:
             try:
                 recs = recommend(
@@ -168,8 +168,17 @@ class MainWindow(QMainWindow):
                 if recs:
                     win_prob = recs[0].attack.win_prob
                     expected = recs[0].attack.expected_score
+                    highlight = recs[0].tile
             except Exception as e:
                 self._set_status(f"推荐计算失败：{e}")
+        else:
+            # 非自己回合：清掉陈旧建议，避免误导
+            self.suggestion_panel.update_recommendations([])
+
+        # 手牌渲染放在推荐之后，才能高亮 #1 推荐牌
+        self.situation_panel.update_hand(
+            list(my_hand.closed.elements()), highlight=highlight
+        )
         self.analysis_panel.update_self(sh, waits, win_prob, expected)
 
         new_events = gs.history[self._last_event_idx:]
