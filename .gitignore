@@ -41,3 +41,9 @@ data/anomaly/
 # 临时
 tmp/
 scratch/
+
+# ADB platform-tools（换机重跑 setup_adb.bat 即可，不入库）
+tools/platform-tools/
+# ADB 运行时数据（帧/命令/状态，临时）
+runtime/
+assets/adb/
